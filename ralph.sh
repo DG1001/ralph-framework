@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Ralph Framework - Universal Autonomous Development
-# Supports: Spec Generation → Implementation → Refinement
+# Version 1.1.0 with Subagents Support
 
 set -e
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 LOOP_COUNT=0
 MAX_LOOPS=2000
 
@@ -23,6 +23,10 @@ PHASE_FILE="$RALPH_DIR/phase.txt"
 NEXT_MODEL_FILE="$RALPH_DIR/next_model.txt"
 MODEL_REASON_FILE="$RALPH_DIR/model_reason.txt"
 HISTORY_FILE="$RALPH_DIR/decision_history.log"
+
+# Subagents
+SUBAGENTS_FILE="subagents.json"
+USE_SUBAGENTS=false
 
 # Stats
 HAIKU_COUNT=0
@@ -50,6 +54,14 @@ init_ralph() {
     mkdir -p src
     mkdir -p tests
     
+    # Check for subagents config
+    if [ -f "$SUBAGENTS_FILE" ]; then
+        USE_SUBAGENTS=true
+        echo -e "${GREEN}✅ Subagents enabled (found $SUBAGENTS_FILE)${NC}"
+    else
+        echo -e "${YELLOW}⚠️  No subagents.json - running without subagents${NC}"
+    fi
+    
     # Initialize Git if not exists
     if [ ! -d .git ]; then
         git init
@@ -58,7 +70,7 @@ init_ralph() {
         echo -e "${GREEN}✅ Git repository initialized${NC}"
     fi
     
-    # Initialize state files if not exist
+    # Initialize state files
     [ ! -f "$STATE_FILE" ] && echo "initialized" > "$STATE_FILE"
     [ ! -f "$PHASE_FILE" ] && echo "0" > "$PHASE_FILE"
     [ ! -f "$HISTORY_FILE" ] && touch "$HISTORY_FILE"
@@ -104,6 +116,23 @@ log_decision() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Loop #$loop | Model: $model | Reason: $reason" >> "$HISTORY_FILE"
 }
 
+# Function to run Claude with or without subagents
+run_claude() {
+    local prompt_file=$1
+    local model=$2
+    
+    if [ "$USE_SUBAGENTS" == "true" ]; then
+        cat "$prompt_file" | claude -p "$(cat -)" \
+            --model "$model" \
+            --agents "$(cat $SUBAGENTS_FILE)" \
+            --dangerously-skip-permissions
+    else
+        cat "$prompt_file" | claude -p "$(cat -)" \
+            --model "$model" \
+            --dangerously-skip-permissions
+    fi
+}
+
 # ============================================================================
 # PHASE 0: SPECIFICATION GENERATION
 # ============================================================================
@@ -114,13 +143,15 @@ phase0_spec_generation() {
     echo -e "${YELLOW}║${NC}  📋 PHASE 0: SPECIFICATION GENERATION                    ${YELLOW}║${NC}"
     echo -e "${YELLOW}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
+    
+    if [ "$USE_SUBAGENTS" == "true" ]; then
+        echo -e "${BLUE}Using parallel subagents for spec generation...${NC}"
+    fi
     echo -e "${BLUE}Reading plan.md and generating specifications...${NC}"
     echo ""
     
-    # Run spec generation with Sonnet
-    cat PROMPT_PHASE0_SPEC.md | claude -p "$(cat -)" \
-        --model sonnet \
-        --dangerously-skip-permissions
+    # Run spec generation with Sonnet (and subagents if available)
+    run_claude "PROMPT_PHASE0_SPEC.md" "sonnet"
     
     if [ $? -eq 0 ]; then
         # Mark phase 0 complete
@@ -167,6 +198,10 @@ phase1_implementation() {
     echo -e "${YELLOW}║${NC}  🔨 PHASE 1: IMPLEMENTATION                               ${YELLOW}║${NC}"
     echo -e "${YELLOW}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
+    
+    if [ "$USE_SUBAGENTS" == "true" ]; then
+        echo -e "${BLUE}Using subagents: Primary = Scheduler, Subagents = Workers${NC}"
+    fi
     
     # Set initial model if not set
     if [ ! -f "$NEXT_MODEL_FILE" ]; then
@@ -234,10 +269,8 @@ phase1_implementation() {
         echo -e "📝 Reason: $REASON"
         echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         
-        # Execute loop
-        cat PROMPT_PHASE1_IMPL.md | claude -p "$(cat -)" \
-            --model "$MODEL" \
-            --dangerously-skip-permissions
+        # Execute loop with subagents if available
+        run_claude "PROMPT_PHASE1_IMPL.md" "$MODEL"
         
         if [ $? -ne 0 ]; then
             echo -e "${YELLOW}⚠️  Error in loop - pausing 5 seconds...${NC}"
@@ -282,13 +315,14 @@ phase2_refinement() {
     echo -e "${YELLOW}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
+    if [ "$USE_SUBAGENTS" == "true" ]; then
+        echo -e "${BLUE}Using subagents for parallel code analysis...${NC}"
+    fi
     echo -e "${BLUE}Analyzing codebase for improvements...${NC}"
     echo ""
     
-    # Run refinement analysis with Sonnet
-    cat PROMPT_PHASE2_REFINE.md | claude -p "$(cat -)" \
-        --model sonnet \
-        --dangerously-skip-permissions
+    # Run refinement analysis with Sonnet (and subagents if available)
+    run_claude "PROMPT_PHASE2_REFINE.md" "sonnet"
     
     if [ $? -eq 0 ]; then
         set_phase "2"
@@ -344,6 +378,10 @@ while [[ $# -gt 0 ]]; do
             echo "  Phase 1: Implementation (from specs)"
             echo "  Phase 2: Refinement (improvements beyond specs)"
             echo ""
+            echo "Subagents:"
+            echo "  If subagents.json exists, Ralph uses specialized subagents"
+            echo "  for parallel operations and context management."
+            echo ""
             exit 0
             ;;
         *)
@@ -362,6 +400,11 @@ check_requirements
 CURRENT_PHASE=$(get_phase)
 
 echo -e "${BLUE}Current Phase: $CURRENT_PHASE${NC}"
+if [ "$USE_SUBAGENTS" == "true" ]; then
+    echo -e "${GREEN}Subagents: Enabled${NC}"
+else
+    echo -e "${YELLOW}Subagents: Disabled${NC}"
+fi
 echo ""
 
 # Handle refine mode
