@@ -121,6 +121,7 @@ your-project/
 │
 ├── CLAUDE.md                   # Context for Claude
 ├── AGENT.md                    # Build/run/test instructions
+├── CODER_ENV.md                # Environment-specific instructions (optional)
 │
 ├── .ralph/                     # Ralph's runtime state
 │   ├── phase.txt              # Current phase
@@ -577,6 +578,7 @@ If Ralph runs out of context:
 - **`specs/`**: Detailed specifications (Ralph generates)
 - **`CLAUDE.md`**: Persistent context (Ralph maintains)
 - **`AGENT.md`**: Build/test instructions (Ralph maintains)
+- **`CODER_ENV.md`**: Environment-specific instructions (optional, see below)
 - **`subagents.json`**: Subagent configuration (included)
 
 ### Phase Files
@@ -585,6 +587,63 @@ If Ralph runs out of context:
 - **`.ralph/next_model.txt`**: Next model to use (haiku or sonnet)
 - **`.ralph/model_reason.txt`**: Why that model was chosen
 - **`.ralph/decision_history.log`**: All model decisions with timestamps
+
+### CODER_ENV.md - Environment Context (Optional)
+
+The `CODER_ENV.md` file provides environment-specific instructions for AI agents (Claude) when working in specialized development environments.
+
+**When to use:**
+- ✅ **XaresAICoder environment**: Running in a containerized cloud IDE with subdomain port proxying
+- ✅ **Custom cloud IDE setups**: Browser-based VS Code with specific networking requirements
+- ✅ **Specialized deployment environments**: Non-standard service binding or port access patterns
+- ✅ **Team environments**: Shared infrastructure with specific configuration needs
+
+**When NOT to use:**
+- ❌ **Standard local development**: Regular desktop IDE with localhost development
+- ❌ **Simple projects**: No backend services or special networking requirements
+- ❌ **Default configurations**: When standard setup instructions in AGENT.md are sufficient
+
+**What it contains:**
+- Environment overview (e.g., Docker containerization, cloud IDE)
+- Critical binding requirements (e.g., must bind to 0.0.0.0 instead of localhost)
+- Port proxying patterns (e.g., subdomain-based routing)
+- Package installation permissions and requirements
+- Cross-service communication patterns
+- Frontend-to-backend URL construction
+- Deployment-specific considerations
+
+**Example use case:**
+
+If your project runs in XaresAICoder:
+```bash
+# CODER_ENV.md tells Ralph/Claude:
+# - Services MUST bind to 0.0.0.0 (not localhost)
+# - Ports are accessible via [projectid]-[port].domain
+# - Sudo access is available for system packages
+# - Frontend apps need dynamic backend URL construction
+```
+
+**How Ralph uses it:**
+
+Ralph automatically includes CODER_ENV.md in the context (via CLAUDE.md reference) so that:
+1. During spec generation, environment constraints are considered
+2. During implementation, services are configured correctly
+3. Test commands use proper URLs and binding
+4. Documentation reflects environment-specific setup
+
+**When to create it:**
+
+Create CODER_ENV.md before running Ralph if:
+- You're using XaresAICoder or similar cloud IDE
+- Your environment has non-standard networking
+- Services need specific binding or URL patterns
+- You want to avoid Ralph making incorrect assumptions about localhost development
+
+**How it works with AGENT.md:**
+- **AGENT.md**: Project-specific build/test commands (e.g., "npm start", "pytest")
+- **CODER_ENV.md**: Environment-specific configuration (e.g., "bind to 0.0.0.0", "use subdomain URLs")
+
+Ralph combines both to generate correct commands for your specific environment.
 
 ## 🔒 Security & Privacy
 
