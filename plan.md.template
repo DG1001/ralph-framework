@@ -1,0 +1,78 @@
+# Project Plan
+
+## Project Name
+[Your Project Name]
+
+## Description
+[Describe what you want to build - can be brief or detailed]
+
+## Core Features
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
+
+## Technology Preferences (Optional)
+- Language: [e.g., Python, JavaScript, TypeScript]
+- Framework: [e.g., Flask, Express, React]
+- Database: [e.g., PostgreSQL, SQLite, MongoDB]
+- Other: [Any other preferences]
+
+## Inspiration / Similar Projects (Optional)
+[Links or descriptions of similar projects]
+
+## Additional Notes
+[Any other context or requirements]
+
+---
+
+## Examples
+
+### Example 1: Simple TODO App
+```
+# Project Plan
+
+## Project Name
+Simple TODO Manager
+
+## Description
+A web-based TODO application with user authentication.
+
+## Core Features
+- User registration and login
+- Create, edit, delete TODOs
+- Mark TODOs as complete
+- Filter by status (all, active, completed)
+- Due dates
+
+## Technology Preferences
+- Backend: Python with Flask
+- Frontend: Simple HTML/CSS/JavaScript
+- Database: SQLite
+```
+
+### Example 2: Conference Manager (from our discussion)
+```
+# Project Plan
+
+## Project Name
+Conference Manager
+
+## Description
+Conference management system for IT conferences, inspired by java-forum-stuttgart.de
+
+## Core Features
+- Call for Papers (CFP) submission
+- Talk review and evaluation system
+- Schedule planning with room management
+- Attendee registration and management
+- Exhibitor/Sponsor management
+- Room and resource management
+
+## Technology Preferences
+- Modern web stack (TBD by Ralph)
+- PostgreSQL database preferred
+- RESTful API
+
+## Inspiration
+- https://java-forum-stuttgart.de
+```

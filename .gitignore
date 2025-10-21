@@ -1,0 +1,33 @@
+# Ralph Runtime
+.ralph/*.txt
+.ralph/*.log
+.ralph/state.txt
+.ralph/phase.txt
+
+# Dependencies
+node_modules/
+__pycache__/
+venv/
+env/
+.env
+.env.local
+
+# Build
+dist/
+build/
+*.pyc
+*.pyo
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Project specific (user creates)
+plan.md
+
+# Keep .ralph directory structure
+!.ralph/.gitkeep
